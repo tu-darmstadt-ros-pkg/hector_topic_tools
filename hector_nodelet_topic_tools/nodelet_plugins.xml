@@ -1,0 +1,7 @@
+<library path="lib/libhector_nodelet_topic_tools">
+  <class name="hector_nodelet_topic_tools/NodeletThrottlePointcloud" type="hector_nodelet_topic_tools::NodeletThrottlePointcloud" base_class_type="nodelet::Nodelet">
+    <description>
+      Pointcloud throttle nodelet.
+    </description>
+  </class>
+</library>
