@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hector_nodelet_topic_tools)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,6 +10,7 @@ project(hector_nodelet_topic_tools)
 find_package(catkin REQUIRED COMPONENTS
   nodelet_topic_tools
   sensor_msgs
+  nodelet
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES hector_nodelet_topic_tools
-  CATKIN_DEPENDS nodelet_topic_tools sensor_msgs
+  CATKIN_DEPENDS nodelet_topic_tools sensor_msgs nodelet
 #  DEPENDS system_lib
 )
 
