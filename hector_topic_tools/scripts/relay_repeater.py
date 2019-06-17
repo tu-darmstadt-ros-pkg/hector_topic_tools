@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 import argparse
-import argcomplete
 
 import rospy
 import rostopic
@@ -34,7 +33,12 @@ class RelayRepeater:
                                                                               "on the target topic in s.")
         parser.add_argument('--wait-for-start', action='store_true', help='Wait for input messages.')
 
-        argcomplete.autocomplete(parser)
+        try:
+            import argcomplete
+        except ImportError:
+            argcomplete = None
+        else:
+            argcomplete.autocomplete(parser)
         args = parser.parse_args()
         return args
 
