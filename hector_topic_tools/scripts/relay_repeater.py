@@ -39,7 +39,7 @@ class RelayRepeater:
             argcomplete = None
         else:
             argcomplete.autocomplete(parser)
-        args = parser.parse_args()
+        args = parser.parse_args(rospy.myargv()[1:])
         return args
 
     def callback(self, m):
