@@ -43,6 +43,10 @@ class RelayRepeater:
         return args
 
     def callback(self, m):
+        # Ignore matches published by this node to prevent cycles
+        if m._connection_header["callerid"] == rospy.get_caller_id():
+            return
+
         if self.input_fn is not None:
             m = self.input_fn(m)
 
