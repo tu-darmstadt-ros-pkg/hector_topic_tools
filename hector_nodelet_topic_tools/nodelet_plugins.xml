@@ -4,4 +4,10 @@
       Pointcloud throttle nodelet.
     </description>
   </class>
+
+  <class name="hector_nodelet_topic_tools/NodeletThrottleImage" type="NodeletThrottleImage" base_class_type="nodelet::Nodelet">
+    <description>
+      Image throttle nodelet.
+    </description>
+  </class>
 </library>
