@@ -1,0 +1,14 @@
+#ifndef HECTOR_ACTION_DEMUX_COMMON_H
+#define HECTOR_ACTION_DEMUX_COMMON_H
+
+#include <ros/ros.h>
+#include <topic_tools/shape_shifter.h>
+
+namespace hector_action_demux {
+
+void publishMessage(std::shared_ptr<ros::Publisher>& publisher, ros::NodeHandle& nh,
+                    const std::string& topic_name, const topic_tools::ShapeShifter& msg);
+
+}
+
+#endif  // HECTOR_ACTION_DEMUX_COMMON_H
