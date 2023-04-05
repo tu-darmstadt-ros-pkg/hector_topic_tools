@@ -10,9 +10,9 @@
 namespace hector_action_demux {
 class ActionDemuxer {
 public:
-  ActionDemuxer(const ros::NodeHandle& server_nh);
-  bool loadConfiguration();
-  void switchClient();
+  ActionDemuxer(const ros::NodeHandle& pnh);
+  bool loadConfiguration(const ros::NodeHandle& nh);
+  void switchClient(const std::string& name);
 
   // Server Callbacks
   void goalCallback(const ShapeShifterConstPtr& msg);
@@ -23,10 +23,10 @@ public:
   void statusCallback(const ShapeShifterConstPtr& msg);
   void resultCallback(const ShapeShifterConstPtr& msg);
 
-  void
-
+  // Dynamic Reconfigure
 private:
   // Action Server Interface
+  ros::NodeHandle pnh_;
   ros::NodeHandle server_nh_;
   ros::Subscriber goal_sub_;
   ros::Subscriber cancel_sub_;
@@ -35,8 +35,8 @@ private:
   std::shared_ptr<ros::Publisher> result_pub_;
 
   // Action Client Interface
-  std::unordered_map<std::string, ActionClient> action_clients_;
-  ActionClient* active_client_;
+  std::unordered_map<std::string, ActionClientPtr> action_clients_;
+  ActionClientPtr active_client_;
 };
 }
 

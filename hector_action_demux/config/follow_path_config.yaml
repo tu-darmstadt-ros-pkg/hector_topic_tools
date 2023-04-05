@@ -1,0 +1,8 @@
+in_action_server_ns: /follow_path
+
+out_action_servers:
+  - name: Default
+    action_ns: /controller/follow_path
+  - name: Whole-Body Controller
+    action_ns: /whole_body_planning_server/follow_path
+

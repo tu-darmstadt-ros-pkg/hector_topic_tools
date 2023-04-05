@@ -32,6 +32,10 @@ private:
   std::function<void(const ShapeShifterConstPtr&)> result_callback_;
 
 };
+
+typedef std::shared_ptr<ActionClient> ActionClientPtr;
+typedef std::shared_ptr<const ActionClient> ActionClientConstPtr;
+
 }
 
 

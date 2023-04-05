@@ -42,18 +42,12 @@ void ActionClient::setResultCallback(const std::function<void(const ShapeShifter
 
 void ActionClient::publishGoal(const ShapeShifterConstPtr& msg)
 {
-  if (!goal_pub_) {
-    goal_pub_ = std::make_shared<ros::Publisher>(msg->advertise(action_nh_, "goal", 10, false));
-  }
-  goal_pub_->publish(msg);
+  publishMessage(goal_pub_, action_nh_, "goal", *msg);
 }
 
 void ActionClient::publishCancel(const ShapeShifterConstPtr& msg)
 {
-  if (!goal_pub_) {
-    goal_pub_ = std::make_shared<ros::Publisher>(msg->advertise(action_nh_, "cancel", 10, false));
-  }
-  goal_pub_->publish(msg);
+  publishMessage(cancel_pub_, action_nh_, "cancel", *msg);
 }
 
 }
