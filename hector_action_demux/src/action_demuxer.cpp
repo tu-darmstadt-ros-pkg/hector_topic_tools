@@ -25,10 +25,6 @@ void ActionDemuxer::cancelCallback(const ShapeShifterConstPtr& msg)
   ROS_DEBUG_STREAM("Cancel received");
   if (active_client_) {
     active_client_->publishCancel(msg);
-    if (!next_action_client_.empty()) {
-      switchClient(next_action_client_);
-      next_action_client_ = "";
-    }
   }
 }
 
@@ -46,18 +42,14 @@ void ActionDemuxer::resultCallback(const ShapeShifterConstPtr& msg)
 {
   active_client_->setGoalActive(false);
   publishMessage(result_pub_, server_nh_, "result", *msg);
-  if (!next_action_client_.empty()) {
-    switchClient(next_action_client_);
-    next_action_client_ = "";
-  }
 }
 
 void ActionDemuxer::switchClient(const std::string& name)
 {
   if (active_client_) {
     if (active_client_->goalActive()) {
-      ROS_INFO_STREAM("Goal active. Action client will be switched after current goal finished.");
-      next_action_client_ = name;
+      ROS_WARN_STREAM("Goal active, cannot switch client");
+      active_client_name_ = active_client_->getName();
       return;
     }
     if (active_client_->getName() == name) {
@@ -93,7 +85,6 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     ROS_ERROR_STREAM(nh.getNamespace() << "/out_action_servers is not an array.");
     return false;
   }
-  std::string first_server;
   std::map<std::string, std::string> enum_map;
   for (int i = 0; i < action_servers.size(); ++i) {
     const XmlRpc::XmlRpcValue& server_dict = action_servers[i];
@@ -111,7 +102,7 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     }
     std::string name = static_cast<std::string>(server_dict["name"]);
     if (i == 0) {
-      first_server = name;
+      active_client_name_ = name;
     }
     ros::NodeHandle action_nh(static_cast<std::string>(server_dict["action_ns"]));
     ActionClientPtr action_client = std::make_shared<ActionClient>(name, action_nh);
@@ -128,8 +119,8 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     ROS_ERROR_STREAM("No action clients configured");
     active_client_ = nullptr;
   } else {
-    switchClient(first_server);
-    reconfigure_server_.registerEnumVariable<std::string>("output", first_server, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
+    switchClient(active_client_name_);
+    reconfigure_server_.registerEnumVariable<std::string>("output", &active_client_name_, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
   }
 
   reconfigure_server_.publishServicesTopics();

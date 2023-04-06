@@ -42,7 +42,7 @@ private:
   ActionClientPtr active_client_;
 
   ddynamic_reconfigure::DDynamicReconfigure reconfigure_server_;
-  std::string next_action_client_;
+  std::string active_client_name_;
 };
 }
 
