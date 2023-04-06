@@ -46,11 +46,11 @@ target_link_libraries(action_demuxer_node ${PROJECT_NAME})
 ## Install ##
 #############
 
-#install(DIRECTORY
-#  config
-#  cfg
-#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-#  )
+install(DIRECTORY
+ config
+ launch
+ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+ )
 
 install(TARGETS ${PROJECT_NAME} action_demuxer_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
