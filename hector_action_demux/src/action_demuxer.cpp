@@ -15,16 +15,20 @@ ActionDemuxer::ActionDemuxer(const ros::NodeHandle& pnh)
 
 void ActionDemuxer::goalCallback(const ShapeShifterConstPtr& msg)
 {
-  ROS_INFO_STREAM("Goal received");
+  ROS_DEBUG_STREAM("Goal received");
   if (active_client_) {
     active_client_->publishGoal(msg);
   }
 }
 void ActionDemuxer::cancelCallback(const ShapeShifterConstPtr& msg)
 {
-  ROS_INFO_STREAM("Cancel received");
+  ROS_DEBUG_STREAM("Cancel received");
   if (active_client_) {
     active_client_->publishCancel(msg);
+    if (!next_action_client_.empty()) {
+      switchClient(next_action_client_);
+      next_action_client_ = "";
+    }
   }
 }
 
@@ -40,11 +44,27 @@ void ActionDemuxer::statusCallback(const ShapeShifterConstPtr& msg)
 
 void ActionDemuxer::resultCallback(const ShapeShifterConstPtr& msg)
 {
+  active_client_->setGoalActive(false);
   publishMessage(result_pub_, server_nh_, "result", *msg);
+  if (!next_action_client_.empty()) {
+    switchClient(next_action_client_);
+    next_action_client_ = "";
+  }
 }
 
 void ActionDemuxer::switchClient(const std::string& name)
 {
+  if (active_client_) {
+    if (active_client_->goalActive()) {
+      ROS_INFO_STREAM("Goal active. Action client will be switched after current goal finished.");
+      next_action_client_ = name;
+      return;
+    }
+    if (active_client_->getName() == name) {
+      return;
+    }
+  }
+
   auto it = action_clients_.find(name);
   if (it == action_clients_.end()) {
     ROS_ERROR_STREAM("Unknown action client name '" << name << "'.");
@@ -74,7 +94,8 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     return false;
   }
   std::string first_server;
-  for (unsigned int i = 0; i < action_servers.size(); ++i) {
+  std::map<std::string, std::string> enum_map;
+  for (int i = 0; i < action_servers.size(); ++i) {
     const XmlRpc::XmlRpcValue& server_dict = action_servers[i];
     if (server_dict.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
       ROS_ERROR_STREAM(nh.getNamespace() << "/" << i << " is not a struct.");
@@ -93,13 +114,14 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
       first_server = name;
     }
     ros::NodeHandle action_nh(static_cast<std::string>(server_dict["action_ns"]));
-    ActionClientPtr action_client = std::make_shared<ActionClient>(action_nh);
+    ActionClientPtr action_client = std::make_shared<ActionClient>(name, action_nh);
     // Set callbacks
     action_client->setFeedbackCallback([this](const ShapeShifterConstPtr& msg) { this->feedbackCallback(msg); });
     action_client->setResultCallback([this](const ShapeShifterConstPtr& msg) { this->resultCallback(msg); });
     action_client->setStatusCallback([this](const ShapeShifterConstPtr& msg) { this->statusCallback(msg); });
     ROS_INFO_STREAM("Registered action server " << name << ": " << action_nh.getNamespace());
     action_clients_.emplace(name, action_client);
+    enum_map.emplace(name, name);
   }
 
   if (action_clients_.empty()) {
@@ -107,13 +129,9 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     active_client_ = nullptr;
   } else {
     switchClient(first_server);
+    reconfigure_server_.registerEnumVariable<std::string>("output", first_server, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
   }
 
-  std::map<std::string, std::string> enum_map;
-  for (const auto& el : action_clients_) {
-    enum_map.emplace(el.first, el.first);
-  }
-  reconfigure_server_.registerEnumVariable<std::string>("output", first_server, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
   reconfigure_server_.publishServicesTopics();
 
   return true;

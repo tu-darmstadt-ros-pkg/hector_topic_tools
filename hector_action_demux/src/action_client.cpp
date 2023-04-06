@@ -4,8 +4,8 @@
 
 namespace hector_action_demux {
 
-ActionClient::ActionClient(const ros::NodeHandle& action_nh)
-: action_nh_(action_nh)
+ActionClient::ActionClient(const std::string& name, const ros::NodeHandle& action_nh)
+: name_(name), action_nh_(action_nh), goal_active_(false)
 {
 }
 
@@ -42,12 +42,26 @@ void ActionClient::setResultCallback(const std::function<void(const ShapeShifter
 
 void ActionClient::publishGoal(const ShapeShifterConstPtr& msg)
 {
+  goal_active_ = true;
   publishMessage(goal_pub_, action_nh_, "goal", *msg);
 }
 
 void ActionClient::publishCancel(const ShapeShifterConstPtr& msg)
 {
+  goal_active_ = false;
   publishMessage(cancel_pub_, action_nh_, "cancel", *msg);
+}
+void ActionClient::setGoalActive(bool active)
+{
+  goal_active_ = active;
+}
+bool ActionClient::goalActive() const
+{
+  return goal_active_;
+}
+std::string ActionClient::getName() const
+{
+  return name_;
 }
 
 }
