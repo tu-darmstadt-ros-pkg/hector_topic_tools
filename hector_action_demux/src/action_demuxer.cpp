@@ -5,7 +5,7 @@
 namespace hector_action_demux {
 
 ActionDemuxer::ActionDemuxer(const ros::NodeHandle& pnh)
-: pnh_(pnh)
+: pnh_(pnh), reconfigure_server_(pnh)
 {
   loadConfiguration(pnh);
 
@@ -109,7 +109,18 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     switchClient(first_server);
   }
 
+  std::map<std::string, std::string> enum_map;
+  for (const auto& el : action_clients_) {
+    enum_map.emplace(el.first, el.first);
+  }
+  reconfigure_server_.registerEnumVariable<std::string>("output", first_server, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
+  reconfigure_server_.publishServicesTopics();
+
   return true;
+}
+void ActionDemuxer::outputChangedCallback(const std::string& value)
+{
+  switchClient(value);
 }
 
 }

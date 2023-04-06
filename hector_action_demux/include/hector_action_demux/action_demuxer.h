@@ -3,7 +3,9 @@
 
 #include <ros/ros.h>
 #include <topic_tools/shape_shifter.h>
+#include <ddynamic_reconfigure/ddynamic_reconfigure.h>
 #include <unordered_map>
+
 
 #include <hector_action_demux/action_client.h>
 
@@ -24,6 +26,7 @@ public:
   void resultCallback(const ShapeShifterConstPtr& msg);
 
   // Dynamic Reconfigure
+  void outputChangedCallback(const std::string& value);
 private:
   // Action Server Interface
   ros::NodeHandle pnh_;
@@ -37,6 +40,8 @@ private:
   // Action Client Interface
   std::unordered_map<std::string, ActionClientPtr> action_clients_;
   ActionClientPtr active_client_;
+
+  ddynamic_reconfigure::DDynamicReconfigure reconfigure_server_;
 };
 }
 

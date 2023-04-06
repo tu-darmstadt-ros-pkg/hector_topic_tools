@@ -3,7 +3,7 @@ project(hector_action_demux)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED roscpp topic_tools)
+find_package(catkin REQUIRED roscpp topic_tools ddynamic_reconfigure)
 
 
 ###################################
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED roscpp topic_tools)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES hector_action_demux
-  CATKIN_DEPENDS roscpp topic_tools
+  CATKIN_DEPENDS roscpp topic_tools ddynamic_reconfigure
 #  DEPENDS system_lib
 )
 
