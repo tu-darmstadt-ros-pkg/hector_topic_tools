@@ -18,8 +18,8 @@ void ActionClient::start()
 
 void ActionClient::shutdown()
 {
-  goal_pub_.reset();
-  cancel_pub_.reset();
+//  goal_pub_.reset();
+//  cancel_pub_.reset();
   feedback_sub_.shutdown();
   status_sub_.shutdown();
   result_sub_.shutdown();
