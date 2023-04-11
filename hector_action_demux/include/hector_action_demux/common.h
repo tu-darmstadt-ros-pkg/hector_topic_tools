@@ -2,14 +2,15 @@
 #define HECTOR_ACTION_DEMUX_COMMON_H
 
 #include <ros/ros.h>
-#include <topic_tools/shape_shifter.h>
+#include <ros_babel_fish/babel_fish_message.h>
 
 namespace hector_action_demux {
 
-void publishMessage(std::shared_ptr<ros::Publisher>& publisher, ros::NodeHandle& nh,
-                    const std::string& topic_name, const topic_tools::ShapeShifter& msg);
+std::string getActionMessageType(const ros_babel_fish::Message::Ptr& action_msg, const std::string& action_field);
 
-void waitForSubscribers(const ros::Publisher& publisher, ros::Duration timeout=ros::Duration(0));
+std::string getActionMessageGoalType(const ros_babel_fish::Message::Ptr& action_msg);
+std::string getActionMessageFeedbackType(const ros_babel_fish::Message::Ptr& action_msg);
+std::string getActionMessageResultType(const ros_babel_fish::Message::Ptr& action_msg);
 
 }
 

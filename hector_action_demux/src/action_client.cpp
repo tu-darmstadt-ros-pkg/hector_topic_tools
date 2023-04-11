@@ -4,52 +4,53 @@
 
 namespace hector_action_demux {
 
-ActionClient::ActionClient(const std::string& name, const ros::NodeHandle& action_nh)
-: name_(name), action_nh_(action_nh), goal_active_(false)
-{
-}
+ActionClient::ActionClient(const std::string& name, const ros::NodeHandle& action_nh, const std::string& goal_type)
+: name_(name), action_nh_(action_nh), goal_type_(goal_type), cancel_type_("actionlib_msgs/GoalID"), goal_active_(false)
+{}
 
 void ActionClient::start()
 {
-  feedback_sub_ = action_nh_.subscribe<topic_tools::ShapeShifter>("feedback", 10, feedback_callback_);
-  status_sub_ = action_nh_.subscribe<topic_tools::ShapeShifter>("status", 10, status_callback_);
-  result_sub_ = action_nh_.subscribe<topic_tools::ShapeShifter>("result", 10, result_callback_);
+  goal_pub_ = fish_.advertise(action_nh_, goal_type_, "goal", 10, false);
+  cancel_pub_ = fish_.advertise(action_nh_, cancel_type_, "cancel", 10, false);
+  feedback_sub_ = action_nh_.subscribe<ros_babel_fish::BabelFishMessage>("feedback", 10, feedback_callback_);
+  status_sub_ = action_nh_.subscribe<ros_babel_fish::BabelFishMessage>("status", 10, status_callback_);
+  result_sub_ = action_nh_.subscribe<ros_babel_fish::BabelFishMessage>("result", 10, result_callback_);
 }
 
 void ActionClient::shutdown()
 {
-//  goal_pub_.reset();
-//  cancel_pub_.reset();
+  goal_pub_.shutdown();
+  cancel_pub_.shutdown();
   feedback_sub_.shutdown();
   status_sub_.shutdown();
   result_sub_.shutdown();
 }
 
-void ActionClient::setFeedbackCallback(const std::function<void(const ShapeShifterConstPtr&)>& callback)
+void ActionClient::setFeedbackCallback(const std::function<void(const ros_babel_fish::BabelFishMessage::ConstPtr&)>& callback)
 {
   feedback_callback_ = callback;
 }
 
-void ActionClient::setStatusCallback(const std::function<void(const ShapeShifterConstPtr&)>& callback)
+void ActionClient::setStatusCallback(const std::function<void(const ros_babel_fish::BabelFishMessage::ConstPtr&)>& callback)
 {
   status_callback_ = callback;
 }
 
-void ActionClient::setResultCallback(const std::function<void(const ShapeShifterConstPtr&)>& callback)
+void ActionClient::setResultCallback(const std::function<void(const ros_babel_fish::BabelFishMessage::ConstPtr&)>& callback)
 {
   result_callback_ = callback;
 }
 
-void ActionClient::publishGoal(const ShapeShifterConstPtr& msg)
+void ActionClient::publishGoal(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
   goal_active_ = true;
-  publishMessage(goal_pub_, action_nh_, "goal", *msg);
+  goal_pub_.publish(msg);
 }
 
-void ActionClient::publishCancel(const ShapeShifterConstPtr& msg)
+void ActionClient::publishCancel(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
   goal_active_ = false;
-  publishMessage(cancel_pub_, action_nh_, "cancel", *msg);
+  cancel_pub_.publish(msg);
 }
 void ActionClient::setGoalActive(bool active)
 {

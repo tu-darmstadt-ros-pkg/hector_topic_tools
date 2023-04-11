@@ -5,22 +5,25 @@
 namespace hector_action_demux {
 
 ActionDemuxer::ActionDemuxer(const ros::NodeHandle& pnh)
-: pnh_(pnh), reconfigure_server_(pnh)
+: pnh_(pnh), status_type_("actionlib_msgs/GoalStatusArray"), reconfigure_server_(pnh)
 {
-  loadConfiguration(pnh);
-
-  goal_sub_ = server_nh_.subscribe<topic_tools::ShapeShifter>("goal", 10, &ActionDemuxer::goalCallback, this);
-  cancel_sub_ = server_nh_.subscribe<topic_tools::ShapeShifter>("cancel", 10, &ActionDemuxer::cancelCallback, this);
+  if (loadConfiguration(pnh)) {
+    goal_sub_ = server_nh_.subscribe<ros_babel_fish::BabelFishMessage>("goal", 10, &ActionDemuxer::goalCallback, this);
+    cancel_sub_ = server_nh_.subscribe<ros_babel_fish::BabelFishMessage>("cancel", 10, &ActionDemuxer::cancelCallback, this);
+    feedback_pub_ = fish_.advertise(server_nh_, feedback_type_, "feedback", 10, false);
+    status_pub_ = fish_.advertise(server_nh_, status_type_, "status", 10, false);
+    result_pub_ = fish_.advertise(server_nh_, result_type_, "result", 10, false);
+  }
 }
 
-void ActionDemuxer::goalCallback(const ShapeShifterConstPtr& msg)
+void ActionDemuxer::goalCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
   ROS_DEBUG_STREAM("Goal received");
   if (active_client_) {
     active_client_->publishGoal(msg);
   }
 }
-void ActionDemuxer::cancelCallback(const ShapeShifterConstPtr& msg)
+void ActionDemuxer::cancelCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
   ROS_DEBUG_STREAM("Cancel received");
   if (active_client_) {
@@ -28,20 +31,20 @@ void ActionDemuxer::cancelCallback(const ShapeShifterConstPtr& msg)
   }
 }
 
-void ActionDemuxer::feedbackCallback(const ShapeShifterConstPtr& msg)
+void ActionDemuxer::feedbackCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
-  publishMessage(feedback_pub_, server_nh_, "feedback", *msg);
+  feedback_pub_.publish(msg);
 }
 
-void ActionDemuxer::statusCallback(const ShapeShifterConstPtr& msg)
+void ActionDemuxer::statusCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
-  publishMessage(status_pub_, server_nh_, "status", *msg);
+  status_pub_.publish(msg);
 }
 
-void ActionDemuxer::resultCallback(const ShapeShifterConstPtr& msg)
+void ActionDemuxer::resultCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg)
 {
   active_client_->setGoalActive(false);
-  publishMessage(result_pub_, server_nh_, "result", *msg);
+  result_pub_.publish(msg);
 }
 
 void ActionDemuxer::switchClient(const std::string& name)
@@ -79,6 +82,24 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
   }
   server_nh_ = ros::NodeHandle(in_action_server_ns);
 
+  std::string action_msg_type;
+  if (!nh.getParam("action_msg_type", action_msg_type)) {
+    ROS_ERROR_STREAM(nh.getNamespace() + "/action_msg_type not found.");
+    return false;
+  }
+
+  // Message types
+  ros_babel_fish::Message::Ptr message;
+  try {
+    message = fish_.createMessage(action_msg_type);
+  } catch (const ros_babel_fish::BabelFishException& e) {
+    ROS_ERROR_STREAM(e.what());
+    return false;
+  }
+  goal_type_ = getActionMessageGoalType(message);
+  feedback_type_ = getActionMessageFeedbackType(message);
+  result_type_ = getActionMessageResultType(message);
+
   XmlRpc::XmlRpcValue action_servers;
   nh.getParam("out_action_servers", action_servers);
   if (action_servers.getType() != XmlRpc::XmlRpcValue::TypeArray) {
@@ -105,11 +126,11 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
       active_client_name_ = name;
     }
     ros::NodeHandle action_nh(static_cast<std::string>(server_dict["action_ns"]));
-    ActionClientPtr action_client = std::make_shared<ActionClient>(name, action_nh);
+    ActionClientPtr action_client = std::make_shared<ActionClient>(name, action_nh, goal_type_);
     // Set callbacks
-    action_client->setFeedbackCallback([this](const ShapeShifterConstPtr& msg) { this->feedbackCallback(msg); });
-    action_client->setResultCallback([this](const ShapeShifterConstPtr& msg) { this->resultCallback(msg); });
-    action_client->setStatusCallback([this](const ShapeShifterConstPtr& msg) { this->statusCallback(msg); });
+    action_client->setFeedbackCallback([this](const ros_babel_fish::BabelFishMessage::ConstPtr& msg) { this->feedbackCallback(msg); });
+    action_client->setResultCallback([this](const ros_babel_fish::BabelFishMessage::ConstPtr& msg) { this->resultCallback(msg); });
+    action_client->setStatusCallback([this](const ros_babel_fish::BabelFishMessage::ConstPtr& msg) { this->statusCallback(msg); });
     ROS_INFO_STREAM("Registered action server " << name << ": " << action_nh.getNamespace());
     action_clients_.emplace(name, action_client);
     enum_map.emplace(name, name);

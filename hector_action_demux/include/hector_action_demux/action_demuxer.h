@@ -2,10 +2,9 @@
 #define HECTOR_ACTION_DEMUX_ACTION_DEMUXER_H
 
 #include <ros/ros.h>
-#include <topic_tools/shape_shifter.h>
+#include <ros_babel_fish/babel_fish.h>
 #include <ddynamic_reconfigure/ddynamic_reconfigure.h>
 #include <unordered_map>
-
 
 #include <hector_action_demux/action_client.h>
 
@@ -17,13 +16,13 @@ public:
   void switchClient(const std::string& name);
 
   // Server Callbacks
-  void goalCallback(const ShapeShifterConstPtr& msg);
-  void cancelCallback(const ShapeShifterConstPtr& msg);
+  void goalCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg);
+  void cancelCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg);
 
   // Client Callbacks
-  void feedbackCallback(const ShapeShifterConstPtr& msg);
-  void statusCallback(const ShapeShifterConstPtr& msg);
-  void resultCallback(const ShapeShifterConstPtr& msg);
+  void feedbackCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg);
+  void statusCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg);
+  void resultCallback(const ros_babel_fish::BabelFishMessage::ConstPtr& msg);
 
   // Dynamic Reconfigure
   void outputChangedCallback(const std::string& value);
@@ -31,11 +30,18 @@ private:
   // Action Server Interface
   ros::NodeHandle pnh_;
   ros::NodeHandle server_nh_;
+  ros_babel_fish::BabelFish fish_;
   ros::Subscriber goal_sub_;
   ros::Subscriber cancel_sub_;
-  std::shared_ptr<ros::Publisher> feedback_pub_;
-  std::shared_ptr<ros::Publisher> status_pub_;
-  std::shared_ptr<ros::Publisher> result_pub_;
+  ros::Publisher feedback_pub_;
+  ros::Publisher status_pub_;
+  ros::Publisher result_pub_;
+
+  std::string goal_type_;
+//  std::string cance_type_;
+  std::string feedback_type_;
+  std::string status_type_;
+  std::string result_type_;
 
   // Action Client Interface
   std::unordered_map<std::string, ActionClientPtr> action_clients_;

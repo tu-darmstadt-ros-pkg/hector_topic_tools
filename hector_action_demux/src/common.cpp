@@ -1,23 +1,22 @@
 #include <hector_action_demux/common.h>
+#include <ros_babel_fish/messages/compound_message.h>
 
 namespace hector_action_demux {
 
-void publishMessage(std::shared_ptr<ros::Publisher>& publisher, ros::NodeHandle& nh,
-                    const std::string& topic_name, const topic_tools::ShapeShifter& msg)
-{
-  if (!publisher) {
-    publisher = std::make_shared<ros::Publisher>(msg.advertise(nh, topic_name, 10, false));
-    waitForSubscribers(*publisher, ros::Duration(1));
-  }
-  publisher->publish(msg);
+std::string getActionMessageType(const ros_babel_fish::Message::Ptr& action_msg, const std::string& action_field) {
+  return action_msg->as<ros_babel_fish::CompoundMessage>()[action_field].as<ros_babel_fish::CompoundMessage>().datatype();
 }
 
-void waitForSubscribers(const ros::Publisher& publisher, ros::Duration timeout) {
-  ros::Time start = ros::Time::now();
-  ros::Rate rate(10.0);
-  while (publisher.getNumSubscribers() == 0 && ((ros::Time::now() - start) < timeout || timeout.toSec() == 0.0)) {
-    rate.sleep();
-  }
+std::string getActionMessageGoalType(const ros_babel_fish::Message::Ptr& action_msg) {
+  return getActionMessageType(action_msg, "action_goal");
+}
+
+std::string getActionMessageFeedbackType(const ros_babel_fish::Message::Ptr& action_msg) {
+  return getActionMessageType(action_msg, "action_feedback");
+}
+
+std::string getActionMessageResultType(const ros_babel_fish::Message::Ptr& action_msg) {
+  return getActionMessageType(action_msg, "action_result");
 }
 
 
