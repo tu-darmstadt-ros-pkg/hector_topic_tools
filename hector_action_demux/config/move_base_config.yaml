@@ -6,4 +6,6 @@ out_action_servers:
     action_ns: /move_base_lite/move_base
   - name: Whole-Body Controller
     action_ns: /move_base_wbc/move_base
+  - name: Stability Planner
+    action_ns: /stability_planner/move_base
 
