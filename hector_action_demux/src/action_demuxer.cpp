@@ -140,6 +140,10 @@ bool ActionDemuxer::loadConfiguration(const ros::NodeHandle& nh)
     ROS_ERROR_STREAM("No action clients configured");
     active_client_ = nullptr;
   } else {
+    std::string default_client;
+    if (pnh_.getParam("default", default_client)) {
+      active_client_name_ = default_client;
+    }
     switchClient(active_client_name_);
     reconfigure_server_.registerEnumVariable<std::string>("output", &active_client_name_, std::bind(&ActionDemuxer::outputChangedCallback, this, std::placeholders::_1), "Change the output action server.", enum_map);
   }
