@@ -8,4 +8,6 @@ out_action_servers:
     action_ns: /move_base_wbc/move_base
   - name: Stability Planner
     action_ns: /stability_planner/move_base
+  - name: L3 Planner
+    action_ns: /l3_planner/move_base
 
