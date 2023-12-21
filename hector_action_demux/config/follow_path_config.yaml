@@ -1,6 +1,7 @@
 in_action_server_ns: /follow_path
 action_msg_type: move_base_lite_msgs/FollowPathAction
 
+default: Default
 out_action_servers:
   - name: Default
     action_ns: /controller/follow_path

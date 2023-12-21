@@ -1,11 +1,10 @@
 in_action_server_ns: /move_base
 action_msg_type: move_base_lite_msgs/MoveBaseAction
 
+default: Default
 out_action_servers:
   - name: Default
     action_ns: /move_base_lite/move_base
-  - name: Whole-Body Controller
-    action_ns: /move_base_wbc/move_base
   - name: Stability Planner
     action_ns: /stability_planner/move_base
   - name: L3 Planner
